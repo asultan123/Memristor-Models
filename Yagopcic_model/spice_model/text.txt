@@ -8,6 +8,7 @@
 * XSV - External connection to plot state variable
 * that is not used otherwise
 
+
 simulator lang = spectre
 
 * Fitting parameters to model different devices

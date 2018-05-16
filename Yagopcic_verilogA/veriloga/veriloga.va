@@ -1,4 +1,4 @@
-// VerilogA for team_model, Yagopcic_model_verilogA, veriloga
+// VerilogA for Yagopcic_model_verilogA
 
 `include "constants.vams"
 `include "disciplines.vams"
@@ -6,69 +6,176 @@
 // Multiplicitive functions to ensure zero state
 // variable motion at memristor boundaries
 
+
+
 module Yagopcic_verilogA(TE, BE, XSV);
 inout TE;
 inout BE;
 output XSV;
-electrical TE,BE,XSV, gnd;
-ground gnd;
+electrical TE,BE,XSV;
 
-parameter real a1=0.165;
-parameter real a2=0.165;
-parameter real b=0.05;
-parameter real Vp=2.86;
-parameter real Vn=3.56;
-parameter real Ap=550000000;
-parameter real An=400000000;
-parameter real xp=0.9;
-parameter real xn=0.9;
-parameter real alphap=20;
-parameter real alphan=20;
-parameter real xo=0.01;
-parameter real eta=1;
+parameter real time_step=1p;
+parameter real model=0;
 
-analog function real wp;
-real Vin; input Vin;
-begin
-	wp = (xp/(1-xp))-(Vin/(1-xp))+1;
-end
-endfunction 
+//paramter list, default is rram
+real a1;
+real a2;
+real b;
+real Vp;
+real Vn;
+real Ap;
+real An;
+real xp;
+real xn;
+real alphap;
+real alphan;
+real xo;
+real eta;
 
-analog function real wn;
-real Vin; input Vin;
-begin
-	wn = Vin/(1-xn);
-end
-endfunction
-
-// Function G(V(t)) - Describes the device threshold
-analog function real G;
-real Vin; input Vin;
-begin
-	G = (Vin <= Vp)?((Vin >= -Vn)?0:-An*(exp(-Vin)-exp(Vn))):Ap*(exp(Vin)-exp(Vp));
-end
-endfunction
-
-
-// Function F(V(t),x(t)) - Describes the SV motion 
-analog function real F;
-real V1,V2; input V1,V2;
-begin
-	F = (eta*V1>=0)? ((V2>= xp)?exp(-alphap*(V2-xp))*wp(V2):1) : ((V2<=(1-xn))?exp(alphan*(V2+xn-1))*wn(V2):1);
-end
-endfunction
-
-// IV Response - Hyperbolic sine due to MIM structure
-analog function real IVRel;
-real V1,V2; input V1,V2;
-begin 
-	IVRel = (V1>=0)?a1*V2*sinh(b*V1):a2*V2*sinh(b*V1);
-end
-endfunction
+real V1,V2,wp,wn,F,G,IVRel;
 
 analog begin
-	V(XSV) <+ idt(eta*F(V(TE,BE),V(XSV))*G(V(TE,BE)),0);
-	I(TE, BE) <+ IVRel(V(TE,BE),V(XSV));
+	
+	$bound_step(time_step);
+
+	@(initial_step)
+		begin
+			if(model == 0) //RRAM - model 0
+			begin
+				a1=0.165;
+				a2=0.165;
+				b=0.05;
+				Vp=2.86;
+				Vn=3.56;
+				Ap=550000000;
+				An=400000000;
+				xp=0.9;
+				xn=0.9;
+				alphap=20;
+				alphan=20;
+				xo=0.01;
+				eta=1;
+			end 
+
+			else if(model == 1) //MetalOxideMetal - model 1
+			begin
+				a1=2.3e-4;
+				a2=3.8e-4;
+				b=1;
+				Vp=1.2;
+				Vn=0.6;
+				Ap=5;
+				An=30;
+				xp=0.7;
+				xn=0.8;
+				alphap=4;
+				alphan=24;
+				xo=0.02;
+				eta=1;
+			end 
+
+			else if(model == 2) //Silver chalcogenide - model 2
+			begin
+				a1=0.17;
+				a2=0.17;
+				b=0.05;
+				Vp=0.16;
+				Vn=0.15;
+				Ap=4000;
+				An=4000;
+				xp=0.3;
+				xn=0.5;
+				alphap=1;
+				alphan=5;
+				xo=0.11;
+				eta=1;
+			end 
+
+			else if(model == 3) //nanoscale conduction channel - model 3
+			begin
+				a1=0.17;
+				a2=0.17;
+				b=0.05;
+				Vp=0.16;
+				Vn=0.15;
+				Ap=4000;
+				An=4000;
+				xp=0.3;
+				xn=0.5;
+				alphap=1;
+				alphan=5;
+				xo=0.11;
+				eta=1;
+			end 
+
+			else if(model == 4) //Nanoscale memristive device - model 4
+			begin
+				a1=0.11;
+				a2=0.11;
+				b=0.5;
+				Vp=0.5;
+				Vn=0.75;
+				Ap=7.5;
+				An=2;
+				xp=0.3;
+				xn=0.5;
+				alphap=1;
+				alphan=5;
+				xo=0.11;
+				eta=1;
+			end 
+
+			else if(model == 5) //Thin anodic titania - model 5
+			begin
+				a1=1.4;
+				a2=1.4;
+				b=0.05;
+				Vp=0.65;
+				Vn=0.56;
+				Ap=16;
+				An=11;
+				xp=0.3;
+				xn=0.5;
+				alphap=1.1;
+				alphan=6.2;
+				xo=0.99;
+				eta=-1;
+			end 
+			
+			else if(model == 6) //Cortical computing - model 6
+			begin
+				a1=0.076;
+				a2=0.06;
+				b=3;
+				Vp=0.9;
+				Vn=0.2;
+				Ap=0.1;
+				An=10;
+				xp=0.15;
+				xn=0.25;
+				alphap=1;
+				alphan=4;
+				xo=0.001;
+				eta=1;
+			end
+		end
+
+	V1 = V(TE,BE);
+	V2 = V(XSV);
+	wp = (xp/(1-xp))-(V2/(1-xp))+1;
+	wn = V2/(1-xn);
+
+	// Function F(V(t),x(t)) - Describes the SV motion 
+	F = (eta*V1>=0)? ((V2>= xp)?exp(-alphap*(V2-xp))*wp:1) : ((V2<=(1-xn))?exp(alphan*(V2+xn-1))*wn:1);
+	
+	// Function G(V(t)) - Describes the device threshold
+	G = (V1 <= Vp)?((V1 >= -Vn)?0:-An*(exp(-V1)-exp(Vn))):Ap*(exp(V1)-exp(Vp));
+	
+	// IV Response - Hyperbolic sine due to MIM structure	
+	IVRel = (V1>=0)?a1*V2*sinh(b*V1):a2*V2*sinh(b*V1);
+
+	V(XSV) <+ idt(eta*F*G,xo);
+	I(TE, BE) <+ IVRel;
 end
 
 endmodule

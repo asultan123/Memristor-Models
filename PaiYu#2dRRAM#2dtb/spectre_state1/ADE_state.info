@@ -1,0 +1,3 @@
+projectDir = '"~/simulation"
+designInfo = '("memristorModels" "PaiYu-RRAM-tb" "schematic" "spectre")
+descriptionText = "None"

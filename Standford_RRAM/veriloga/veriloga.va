@@ -50,11 +50,13 @@ Model name: rram_random_v_1_0_0.va
 *******************************************************************/
 
 `include "constants.vams"`include "disciplines.vams"
-module rram_v_1_0_0(TE, BE);//  electrical properties, top electrode, TE, bottom electrode BE
+module rram_v_1_0_0(TE, BE, gapOut, gapddt, gammaout, sinhout, tempCur);//  electrical properties, top electrode, TE, bottom electrode BE
 inout			TE, BE;
-electrical		TE, BE;
+output gapOut, gapddt, gammaout, sinhout, tempCur;
+electrical		TE, BE, gapOut, gapddt, gammaout, sinhout, tempCur;
 //  Version Parameter
 parameter real		version		= 1.00 from(0:inf);
+
 // Switch to select Standard Model (0) or Dynamic Model (1)
 parameter integer	model_switch		= 0    from[0: 1];
 
@@ -88,7 +90,7 @@ parameter real		gap_ini		= 2e-10 from(0:100e-10);
 //  minimum gap distance, gap_min
 parameter real		gap_min		= 2e-10 from(0:100e-10);
 //  maximum gap distance, gap_max
-parameter real		gap_max		= 17e-10 from(0:100e-10);
+parameter real		gap_max		= 18e-10 from(0:100e-10);
 //  thermal resistance
 parameter real		Rth		= 2.1e3 from(0:inf);
 //  oxide thickness, thickness
@@ -142,6 +144,7 @@ parameter real		pulse_width = 20n;
 // calculate next time step gap situation
 // gap time derivative - determinant part
 		gap_ddt = - Vel0 * exp(- q * Ea / kb / T_cur) * sinh(gamma * a0 / tox * q * Vtb / kb / T_cur);
+
 // gap time derivative - variation part
 		deltaGap = deltaGap0 * model_switch;
 		gap_random_ddt = $rdist_normal(rand_seed, 0, 1) * deltaGap / (1 + exp((T_crit - T_cur)/T_smth));
@@ -153,6 +156,11 @@ parameter real		pulse_width = 20n;
 		end
 		Itb = I0 * exp(-gap/g0)*sinh(Vtb/V0);
 		I(TE,BE)<+Itb;
+		V(gapOut) <+ gap;
+		V(gapddt) <+ gap_ddt;
+		V(gammaout) <+ gamma;
+		V(sinhout) <+ sinh(gamma * a0 / tox * q * Vtb / kb / T_cur);
+		V(tempCur) <+ T_cur;
 		end
 endmodule
 

@@ -551,7 +551,7 @@ if (model==4) begin // VTEAM model
     dxdt=0;
     end
 
-	//$display(dxdt);
+
 // No window
     if (window_type==0) begin 
      
